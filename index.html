@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Image Gallery</title>
+    <style>
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+
+        .copy-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-icon:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .copy-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery-grid"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryGrid = document.querySelector('.gallery-grid');
+            
+            // Fetch images from GitHub via jsDelivr API
+            fetch('https://data.jsdelivr.com/v1/package/gh/itspabel/Images')
+                .then(response => response.json())
+                .then(data => {
+                    const imageFiles = data.files.filter(file => {
+                        const ext = file.name.split('.').pop().toLowerCase();
+                        return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+                    });
+
+                    imageFiles.forEach(file => {
+                        const imageUrl = `https://cdn.jsdelivr.net/gh/itspabel/Images/${encodeURIComponent(file.name)}`;
+                        
+                        // Create gallery item
+                        const item = document.createElement('div');
+                        item.className = 'gallery-item';
+                        
+                        // Create image element
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = file.name;
+                        
+                        // Create copy button
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'copy-icon';
+                        copyBtn.innerHTML = `
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12V1z"/>
+                            </svg>
+                        `;
+
+                        // Create embed code
+                        const embedCode = `<img src="${imageUrl}">`;
+
+                        // Copy function
+                        const copyToClipboard = () => {
+                            navigator.clipboard.writeText(embedCode).then(() => {
+                                alert('Embed code copied to clipboard!');
+                            }).catch(err => {
+                                console.error('Failed to copy:', err);
+                            });
+                        };
+
+                        // Add event listeners
+                        img.addEventListener('click', copyToClipboard);
+                        copyBtn.addEventListener('click', copyToClipboard);
+
+                        // Append elements
+                        item.appendChild(img);
+                        item.appendChild(copyBtn);
+                        galleryGrid.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading images:', error);
+                    galleryGrid.innerHTML = '<p>Error loading images. Please try again later.</p>';
+                });
+        });
+    </script>
+</body>
+  </html>
